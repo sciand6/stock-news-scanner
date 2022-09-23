@@ -1,17 +1,30 @@
 import Head from 'next/head'
+import Link from 'next/link'
 import { useState } from 'react'
 
 export default function Home() {
   const [articles, setArticles] = useState([])
   const [tickerString, setTickerString] = useState('')
 
-  const getArticles = () => {
+  const getArticles = (timePeriod) => {
     const tickers = tickerString.split(',')
     setArticles([])
     tickers.forEach(async (ticker) => {
       const response = await fetch(`/api/articles/${ticker}`)
-      const data = await response.json()
-      // data.items[0] = the latest article
+      let data = await response.json()
+
+      if (!data.items) {
+        return
+      }
+
+      if (timePeriod === 'today') {
+        data.items = data.items.filter(
+          (item) =>
+            new Date(item.published).toDateString() ===
+            new Date().toDateString(),
+        )
+      }
+
       if (data.items[0]) {
         data.items[0].ticker = ticker
         setArticles((current) => [...current, data.items[0]])
@@ -20,7 +33,7 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div className="w-full flex flex-col justify-center items-center">
       <Head>
         <title>Stock News Scanner</title>
         <meta
@@ -29,24 +42,43 @@ export default function Home() {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <h2>Enter Tickers</h2>
+      <h2 className="text-2xl font-bold underline mb-2">Enter Tickers</h2>
       <input
         type="text"
+        className="w-4/5"
         onChange={(e) => setTickerString(e.target.value)}
       ></input>
-      <h2>Get News</h2>
-      <button onClick={getArticles}>Today</button>
-      <button onClick={getArticles}>This Week</button>
-      <button onClick={getArticles}>This Month</button>
-      <button onClick={getArticles}>This Year</button>
+      <div>
+        <button
+          className="mx-1 my-2 p-2 bg-black rounded text-white"
+          onClick={getArticles}
+        >
+          Latest
+        </button>
+        <button
+          className="mx-1 p-2 bg-black rounded text-white"
+          onClick={() => {
+            getArticles('today')
+          }}
+        >
+          Today
+        </button>
+      </div>
+      <h2 className="text-2xl font-bold mb-2">Get News</h2>
+
       {articles.map((article) => {
         return article ? (
-          <div key={article.title}>
-            <h1>{article.ticker}</h1>
-            <h2>{article.title}</h2>
-            <i>{new Date(article.published).toUTCString()}</i>
-            <p>{article.description}</p>
-          </div>
+          <Link href={article.link}>
+            <div
+              className="rounded bg-white p-2 shadow mb-3 cursor-pointer hover:bg-sky-50 w-11/12"
+              key={article.title}
+            >
+              <h1 className="text-2xl bold uppercase">{article.ticker}</h1>
+              <h2 className="text-xl">{article.title}</h2>
+              <i>{new Date(article.published).toUTCString()}</i>
+              <p>{article.description}</p>
+            </div>
+          </Link>
         ) : (
           ''
         )
