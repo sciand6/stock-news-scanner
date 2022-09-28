@@ -35,3 +35,11 @@ select,
 textarea {
   @apply rounded border p-2  outline-none ring-indigo-300  focus:ring;
 }
+
+.article {
+  @apply rounded bg-white p-2 shadow mb-3 cursor-pointer hover:bg-sky-50 w-11/12
+}
+
+.btn {
+  @apply p-2 bg-black rounded text-white
+}
