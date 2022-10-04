@@ -6,21 +6,30 @@ function ArticleList() {
   const [articles, setArticles] = useState([])
   const [tickerString, setTickerString] = useState('')
 
-  const getArticles = (timePeriod = '') => {
+  const getArticles = async (option = '') => {
     const tickers = tickerString.split(',')
     setArticles([])
 
-    tickers.forEach(async (ticker) => {
-      const response = await fetch(`/api/articles/${ticker}`)
+    if (option === 'all') {
+      const response = await fetch(`/api/articles/${tickers[0]}`)
       let data = await response.json()
 
       if (!data.items || data.items.length === 0) return
 
-      data.items[0].ticker = ticker
-      data.items = filterArticlesByTimePeriod(timePeriod, data.items)
+      setArticles(data.items)
+    } else {
+      tickers.forEach(async (ticker) => {
+        const response = await fetch(`/api/articles/${ticker}`)
+        let data = await response.json()
 
-      setArticles((current) => [...current, data.items[0]])
-    })
+        if (!data.items || data.items.length === 0) return
+
+        data.items[0].ticker = ticker
+        data.items = filterArticlesByTimePeriod(option, data.items)
+
+        setArticles((current) => [...current, data.items[0]])
+      })
+    }
   }
 
   return (
@@ -33,7 +42,7 @@ function ArticleList() {
       ></input>
       <div>
         <button className="btn mx-1 my-2" onClick={() => getArticles('')}>
-          Latest
+          Get Latest
         </button>
         <button
           className="btn mx-1 p-2"
@@ -41,7 +50,15 @@ function ArticleList() {
             getArticles('today')
           }}
         >
-          Today
+          Get Today
+        </button>
+        <button
+          className="btn mx-1 p-2"
+          onClick={() => {
+            getArticles('all')
+          }}
+        >
+          Get All
         </button>
       </div>
 
